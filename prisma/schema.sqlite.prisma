@@ -1,0 +1,527 @@
+// SQLite schema for LOCAL DEVELOPMENT only
+// For Vercel deployment, use schema.prisma (PostgreSQL)
+// To switch: cp prisma/schema.sqlite.prisma prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  name         String
+  role         String   @default("patient")
+  hospital     String?
+  badgeId      String?
+  avatar       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  patient        Patient?
+  accessLogs     AccessLog[]
+  sentNotifications Notification[]
+}
+
+model Patient {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  dateOfBirth     String
+  gender          String
+  bloodType       String
+  rhFactor        String?
+  dnr             Boolean  @default(false)
+  organDonor      Boolean  @default(false)
+  tissueDonor     Boolean  @default(false)
+  occupation      String?
+  workplace       String?
+  primaryLanguage String   @default("English")
+  secondaryLanguages String?
+  pregnancyStatus String?
+  lastMenstrualPeriod String?
+  insuranceProvider String?
+  insuranceId     String?
+  weight          Float?
+  height          Float?
+  ethnicity       String?
+  religion        String?
+  nationality     String?
+  refugeeStatus   Boolean  @default(false)
+  veteranStatus   Boolean  @default(false)
+  militaryBranch  String?
+  deployments     String?
+  disabilityStatus String?
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  emergencyNotes  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allergies       Allergy[]
+  medications     Medication[]
+  conditions      Condition[]
+  surgeries       Surgery[]
+  implants        Implant[]
+  vaccinations    Vaccination[]
+  emergencyContacts EmergencyContact[]
+  consentProxies  ConsentProxy[]
+  accessLogs      AccessLog[]
+  medicalTests    MedicalTest[]
+  pharmacogenomics Pharmacogenomic[]
+  vitalBaselines  VitalBaseline[]
+  bloodAntibodies BloodAntibody[]
+  culturalDirectives CulturalDirective[]
+  voiceMessages   VoiceMessage[]
+  advanceDirectives AdvanceDirective[]
+  medicationAdherence MedicationAdherence[]
+  painProfile     PainProfile?
+  geneticFlags    GeneticFlag[]
+  deviceIntegrations DeviceIntegration[]
+  occupationalExposures OccupationalExposure[]
+  dischargeAssessments DischargeAssessment[]
+  radiationExposures RadiationExposure[]
+  caregiverPasses CaregiverPass[]
+  medicalTimeline MedicalTimelineEvent[]
+  familyWarRoom   FamilyWarRoom[]
+}
+
+model Allergy {
+  id               String   @id @default(cuid())
+  patientId        String
+  name             String
+  severity         String
+  reaction         String?
+  lastReactionDate String?
+  treatmentRequired String?
+  crossReactivity  String?
+  verifiedBy       String?
+  patient          Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Medication {
+  id              String   @id @default(cuid())
+  patientId       String
+  name            String
+  dose            String
+  frequency       String
+  startDate       String?
+  endDate         String?
+  prescriber      String?
+  category        String?
+  isOpioid        Boolean  @default(false)
+  isPsychMed      Boolean  @default(false)
+  requiresMonitoring Boolean @default(false)
+  adherenceScore  Float?
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Condition {
+  id            String   @id @default(cuid())
+  patientId     String
+  name          String
+  diagnosedDate String?
+  status        String   @default("active")
+  severity      String?
+  icdCode       String?
+  cluster       String?
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Surgery {
+  id          String   @id @default(cuid())
+  patientId   String
+  name        String
+  date        String
+  hospital    String?
+  surgeon     String?
+  bodyRegion  String?
+  notes       String?
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Implant {
+  id           String   @id @default(cuid())
+  patientId    String
+  name         String
+  implantDate  String
+  manufacturer String?
+  serialNumber String?
+  bodyLocation String?
+  mriSafe      Boolean  @default(false)
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Vaccination {
+  id        String   @id @default(cuid())
+  patientId String
+  name      String
+  date      String
+  status    String   @default("completed")
+  nextDue   String?
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model EmergencyContact {
+  id           String   @id @default(cuid())
+  patientId    String
+  name         String
+  relationship String
+  phone        String
+  email        String?
+  priority     Int      @default(1)
+  canConsent   Boolean  @default(false)
+  language     String?
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model ConsentProxy {
+  id            String   @id @default(cuid())
+  patientId     String
+  proxyName     String
+  relationship  String
+  phone         String
+  email         String?
+  priority      Int      @default(1)
+  verified      Boolean  @default(false)
+  governmentId  String?
+  consentScope  String?
+  activeFrom    String?
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model AccessLog {
+  id           String    @id @default(cuid())
+  accessorId   String
+  patientId    String
+  accessType   String
+  accessMethod String
+  accessTier   String?
+  reason       String?
+  dataViewed   String
+  overrideReason String?
+  timestamp    DateTime  @default(now())
+  expiresAt    DateTime?
+  accessor     User      @relation(fields: [accessorId], references: [id])
+  patient      Patient   @relation(fields: [patientId], references: [id])
+}
+
+model DrugInteractionRule {
+  id               String @id @default(cuid())
+  drugName         String
+  contraindication String
+  type             String
+  severity         String
+  description      String
+  alternative      String?
+}
+
+model MedicalTest {
+  id           String   @id @default(cuid())
+  patientId    String
+  testName     String
+  testDate     DateTime
+  facility     String?
+  results      String?
+  orderingDoc  String?
+  status       String   @default("ordered")
+  radiationDose Float?
+  bodyRegion   String?
+  createdAt    DateTime @default(now())
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Pharmacogenomic {
+  id           String  @id @default(cuid())
+  patientId    String
+  gene         String
+  variant      String
+  implications String
+  medications  String?
+  verifiedDate String?
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model VitalBaseline {
+  id           String  @id @default(cuid())
+  patientId    String
+  vitalType    String
+  value        Float
+  unit         String
+  source       String
+  recordedDate String
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model BloodAntibody {
+  id          String  @id @default(cuid())
+  patientId   String
+  antibody    String
+  antibodyType String
+  detectedDate String
+  significance String
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model CulturalDirective {
+  id          String  @id @default(cuid())
+  patientId   String
+  religion    String
+  directive   String
+  description String
+  overrideAllowed Boolean @default(false)
+  verifiedBy  String?
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model VoiceMessage {
+  id          String  @id @default(cuid())
+  patientId   String
+  category    String
+  title       String
+  audioUrl    String?
+  duration    Int?
+  transcript  String?
+  recordedAt  DateTime @default(now())
+  isActive    Boolean @default(true)
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model AdvanceDirective {
+  id           String  @id @default(cuid())
+  patientId    String
+  directiveType String
+  description  String
+  documentUrl  String?
+  createdDate  String
+  expiryDate   String?
+  witnessName  String?
+  notarized    Boolean @default(false)
+  isActive     Boolean @default(true)
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model MedicationAdherence {
+  id           String  @id @default(cuid())
+  patientId    String
+  medicationName String
+  overallScore Float
+  lastRefillDate String?
+  missedDosesLast30Days Int?
+  source       String
+  updatedDate  String
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model PainProfile {
+  id                      String  @id @default(cuid())
+  patientId               String  @unique
+  chronicPainConditions   String
+  currentPainPlan         String
+  opioidTolerance         String
+  opioidUseDisorderHistory String
+  effectiveMedications    String
+  ineffectiveMedications  String
+  painMedAllergies        String
+  sickleCellStatus        Boolean @default(false)
+  mmeDailyDose            Float?
+  naloxonePrescribed      Boolean @default(false)
+  painManagementDoctor    String?
+  patient                 Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model GeneticFlag {
+  id              String  @id @default(cuid())
+  patientId       String
+  condition       String
+  gene            String?
+  implications    String
+  medicationsToAvoid String
+  safeAlternatives String
+  familyScreening Boolean @default(false)
+  verifiedDate    String?
+  patient         Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model DeviceIntegration {
+  id              String  @id @default(cuid())
+  patientId       String
+  deviceType      String
+  deviceName      String
+  manufacturer    String?
+  model           String?
+  serialNumber    String?
+  lastSyncDate    String?
+  batteryLevel    Int?
+  dataSummary     String?
+  isActive        Boolean @default(true)
+  patient         Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model OccupationalExposure {
+  id            String  @id @default(cuid())
+  patientId     String
+  workplace     String
+  hazardType    String
+  specificAgent String?
+  exposureLevel String?
+  msdsReference String?
+  lastExposure  String?
+  ppeRequired   String?
+  patient       Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model DischargeAssessment {
+  id                  String  @id @default(cuid())
+  patientId           String
+  visitDate           String
+  dischargeSafetyScore Int
+  transportAvailable  Boolean @default(true)
+  pharmacyAccess      Boolean @default(true)
+  foodSecurity        Boolean @default(true)
+  socialSupport       Boolean @default(true)
+  healthLiteracy      String
+  followUpScheduled   Boolean @default(false)
+  homeHealthNeeded    Boolean @default(false)
+  dmeNeeded           String?
+  readmissionRisk     Float?
+  interventions       String?
+  aiRecommendation    String?
+  createdAt           DateTime @default(now())
+  patient             Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model RadiationExposure {
+  id              String  @id @default(cuid())
+  patientId       String
+  source          String
+  bodyRegion      String
+  doseMSv         Float
+  studyDate       String
+  facility        String?
+  cumulativeTotal Float?
+  patient         Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model CaregiverPass {
+  id            String  @id @default(cuid())
+  patientId     String
+  caregiverName String
+  relationship  String
+  accessLevel   Int
+  qrCode        String
+  issuedAt      DateTime @default(now())
+  expiresAt     DateTime
+  usedAt        DateTime?
+  isActive      Boolean @default(true)
+  patient       Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model MedicalTimelineEvent {
+  id          String  @id @default(cuid())
+  patientId   String
+  eventType   String
+  title       String
+  description String
+  eventDate   String
+  facility    String?
+  severity    String?
+  icon        String?
+  metadata    String?
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model FamilyWarRoom {
+  id           String  @id @default(cuid())
+  patientId    String
+  roomId       String  @unique
+  status       String  @default("active")
+  patientStatus String?
+  patientLocation String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  members      WarRoomMember[]
+  messages     WarRoomMessage[]
+  updates      WarRoomUpdate[]
+}
+
+model WarRoomMember {
+  id        String  @id @default(cuid())
+  roomId    String
+  name      String
+  role      String
+  phone     String?
+  email     String?
+  isOnline  Boolean @default(false)
+  joinedAt  DateTime @default(now())
+  warRoom   FamilyWarRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model WarRoomMessage {
+  id        String  @id @default(cuid())
+  roomId    String
+  senderName String
+  senderRole String
+  content   String
+  timestamp DateTime @default(now())
+  warRoom   FamilyWarRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model WarRoomUpdate {
+  id        String  @id @default(cuid())
+  roomId    String
+  type      String
+  content   String
+  timestamp DateTime @default(now())
+  warRoom   FamilyWarRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id          String  @id @default(cuid())
+  userId      String
+  type        String
+  title       String
+  message     String
+  priority    String  @default("normal")
+  read        Boolean @default(false)
+  actionUrl   String?
+  createdAt   DateTime @default(now())
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OutbreakAlert {
+  id          String  @id @default(cuid())
+  type        String
+  zipCode     String
+  symptoms    String
+  caseCount   Int
+  firstDetected DateTime
+  alertLevel  String
+  description String
+  status      String  @default("active")
+  createdAt   DateTime @default(now())
+}
+
+model OrganMatch {
+  id           String  @id @default(cuid())
+  donorPatientId String
+  recipientId  String?
+  organType    String
+  bloodMatch   Boolean @default(false)
+  tissueMatch  Float?
+  facility     String?
+  distance     Float?
+  viabilityMinutes Int?
+  status       String  @default("searching")
+  createdAt    DateTime @default(now())
+}

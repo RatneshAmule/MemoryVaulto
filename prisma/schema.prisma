@@ -1,0 +1,574 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  name         String
+  role         String   @default("patient") // "patient", "doctor", "paramedic", "admin", "nurse", "specialist"
+  hospital     String?
+  badgeId      String?  // first responder / staff badge ID
+  avatar       String?  // URL to profile picture
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  patient        Patient?
+  accessLogs     AccessLog[]
+  sentNotifications Notification[]
+}
+
+// ==================== PATIENT PROFILE ====================
+
+model Patient {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  dateOfBirth     String
+  gender          String
+  bloodType       String
+  rhFactor        String?  // "+", "-"
+  dnr             Boolean  @default(false)
+  organDonor      Boolean  @default(false)
+  tissueDonor     Boolean  @default(false)
+  occupation      String?
+  workplace       String?  // employer name for occupational alerts
+  primaryLanguage String   @default("English")
+  secondaryLanguages String? // comma-separated
+  pregnancyStatus String?  // null, "confirmed", "possible", "not-pregnant", "postpartum"
+  lastMenstrualPeriod String? // date string
+  insuranceProvider String?
+  insuranceId     String?
+  weight          Float?   // kg
+  height          Float?   // cm
+  ethnicity       String?  // for genetic risk factors
+  religion        String?  // for cultural directives
+  nationality     String?  // for refugee/traveler context
+  refugeeStatus   Boolean  @default(false)
+  veteranStatus   Boolean  @default(false)
+  militaryBranch  String?  // Army, Navy, etc.
+  deployments     String?  // comma-separated deployment locations
+  disabilityStatus String? // "none", "physical", "cognitive", "both"
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  emergencyNotes  String?  // free text, patient-editable
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allergies       Allergy[]
+  medications     Medication[]
+  conditions      Condition[]
+  surgeries       Surgery[]
+  implants        Implant[]
+  vaccinations    Vaccination[]
+  emergencyContacts EmergencyContact[]
+  consentProxies  ConsentProxy[]
+  accessLogs      AccessLog[]
+  medicalTests    MedicalTest[]
+  pharmacogenomics Pharmacogenomic[]
+  vitalBaselines  VitalBaseline[]
+  bloodAntibodies BloodAntibody[]
+  culturalDirectives CulturalDirective[]
+  voiceMessages   VoiceMessage[]
+  advanceDirectives AdvanceDirective[]
+  medicationAdherence MedicationAdherence[]
+  painProfile     PainProfile?
+  geneticFlags    GeneticFlag[]
+  deviceIntegrations DeviceIntegration[]
+  occupationalExposures OccupationalExposure[]
+  dischargeAssessments DischargeAssessment[]
+  radiationExposures RadiationExposure[]
+  caregiverPasses CaregiverPass[]
+  medicalTimeline MedicalTimelineEvent[]
+  familyWarRoom   FamilyWarRoom[]
+}
+
+// ==================== MEDICAL DATA ====================
+
+model Allergy {
+  id               String   @id @default(cuid())
+  patientId        String
+  name             String
+  severity         String   // "mild", "moderate", "severe", "life-threatening"
+  reaction         String?
+  lastReactionDate String?
+  treatmentRequired String?  // "epinephrine", "antihistamine", etc.
+  crossReactivity  String?  // comma-separated related allergens
+  verifiedBy       String?  // doctor who verified
+  patient          Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Medication {
+  id              String   @id @default(cuid())
+  patientId       String
+  name            String
+  dose            String
+  frequency       String
+  startDate       String?
+  endDate         String?
+  prescriber      String?
+  category        String?  // "cardiac", "psychiatric", "pain", "diabetes", etc.
+  isOpioid        Boolean  @default(false)
+  isPsychMed      Boolean  @default(false)
+  requiresMonitoring Boolean @default(false)
+  adherenceScore  Float?   // 0-100
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Condition {
+  id            String   @id @default(cuid())
+  patientId     String
+  name          String
+  diagnosedDate String?
+  status        String   @default("active") // "active", "resolved", "chronic"
+  severity      String?  // "mild", "moderate", "severe"
+  icdCode       String?  // ICD-11 code
+  cluster       String?  // "metabolic", "cardiac", "respiratory", "mental_health"
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Surgery {
+  id          String   @id @default(cuid())
+  patientId   String
+  name        String
+  date        String
+  hospital    String?
+  surgeon     String?
+  bodyRegion  String?  // "chest", "spine", "abdomen", "head", "extremity"
+  notes       String?
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Implant {
+  id           String   @id @default(cuid())
+  patientId    String
+  name         String
+  implantDate  String
+  manufacturer String?
+  serialNumber String?
+  bodyLocation String?  // "chest", "left-hip", "cervical-spine"
+  mriSafe      Boolean  @default(false)
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Vaccination {
+  id        String   @id @default(cuid())
+  patientId String
+  name      String
+  date      String
+  status    String   @default("completed") // "completed", "partial", "due", "overdue"
+  nextDue   String?  // date of next dose
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== EMERGENCY CONTACTS & CONSENT ====================
+
+model EmergencyContact {
+  id           String   @id @default(cuid())
+  patientId    String
+  name         String
+  relationship String
+  phone        String
+  email        String?
+  priority     Int      @default(1)
+  canConsent   Boolean  @default(false)
+  language     String?  // preferred language
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model ConsentProxy {
+  id            String   @id @default(cuid())
+  patientId     String
+  proxyName     String
+  relationship  String
+  phone         String
+  email         String?
+  priority      Int      @default(1)
+  verified      Boolean  @default(false)
+  governmentId  String?  // ID on file
+  consentScope  String?  // "full", "medical-only", "surgical-only", "end-of-life"
+  activeFrom    String?  // when this proxy's authority activates
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== ACCESS & AUDIT ====================
+
+model AccessLog {
+  id           String    @id @default(cuid())
+  accessorId   String
+  patientId    String
+  accessType   String    // "emergency", "routine", "override", "break-glass"
+  accessMethod String    // "qr", "biometric", "facial", "badge", "search", "caregiver-pass"
+  accessTier   String?   // "1-basic", "2-physical", "3-mental-health", "4-surgical", "5-end-of-life"
+  reason       String?
+  dataViewed   String    // JSON string
+  overrideReason String?
+  timestamp    DateTime  @default(now())
+  expiresAt    DateTime?
+
+  accessor     User      @relation(fields: [accessorId], references: [id])
+  patient      Patient   @relation(fields: [patientId], references: [id])
+}
+
+// ==================== DRUG INTERACTION RULES ====================
+
+model DrugInteractionRule {
+  id               String @id @default(cuid())
+  drugName         String
+  contraindication String
+  type             String // "allergy", "condition", "medication", "genetic", "pregnancy"
+  severity         String // "danger", "warning", "caution"
+  description      String
+  alternative      String? // suggested alternative medication
+}
+
+// ==================== MEDICAL TESTS ====================
+
+model MedicalTest {
+  id           String   @id @default(cuid())
+  patientId    String
+  testName     String
+  testDate     DateTime
+  facility     String?
+  results      String?
+  orderingDoc  String?
+  status       String   @default("ordered") // "ordered", "completed", "cancelled"
+  radiationDose Float?  // mSv if applicable
+  bodyRegion   String?
+  createdAt    DateTime @default(now())
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== PHARMACOGENOMICS (NF1) ====================
+
+model Pharmacogenomic {
+  id           String  @id @default(cuid())
+  patientId    String
+  gene         String  // "CYP2D6", "CYP2C19", "VKORC1", "HLA-B*1502", "RYR1"
+  variant      String  // "poor-metabolizer", "ultra-rapid", "sensitive", "normal"
+  implications String  // what this means for treatment
+  medications  String? // comma-separated affected medications
+  verifiedDate String?
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== VITAL BASELINES (NF8) ====================
+
+model VitalBaseline {
+  id           String  @id @default(cuid())
+  patientId    String
+  vitalType    String  // "bp_systolic", "bp_diastolic", "heart_rate", "spo2", "temperature", "respiratory_rate", "creatinine", "hba1c", "inr", "lithium_level", "tsh"
+  value        Float
+  unit         String  // "mmHg", "bpm", "%", "C", "/min", "mg/dL", etc.
+  source       String  // "routine-visit", "wearable-average", "home-monitoring"
+  recordedDate String
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== BLOOD COMPATIBILITY (NF29) ====================
+
+model BloodAntibody {
+  id          String  @id @default(cuid())
+  patientId   String
+  antibody    String  // "Anti-Kell", "Anti-D", "Anti-Duffy(a)", "Anti-Kidd(b)"
+  antibodyType String // "IgG", "IgM"
+  detectedDate String
+  significance String // "clinically-significant", "possible", "insignificant"
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== CULTURAL/RELIGIOUS DIRECTIVES (NF24) ====================
+
+model CulturalDirective {
+  id          String  @id @default(cuid())
+  patientId   String
+  religion    String
+  directive   String  // "no-blood-products", "female-provider-preferred", "no-beef-medications", "last-rites", etc.
+  description String  // detailed explanation
+  overrideAllowed Boolean @default(false)
+  verifiedBy  String? // religious authority who verified
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== VOICE OF THE PATIENT (NF41) ====================
+
+model VoiceMessage {
+  id          String  @id @default(cuid())
+  patientId   String
+  category    String  // "intro", "end-of-life", "family-message", "cultural", "treatment-preferences"
+  title       String
+  audioUrl    String? // base64 encoded audio
+  duration    Int?    // seconds
+  transcript  String? // text transcript
+  recordedAt  DateTime @default(now())
+  isActive    Boolean @default(true)
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== ADVANCE DIRECTIVES (NF13) ====================
+
+model AdvanceDirective {
+  id           String  @id @default(cuid())
+  patientId    String
+  directiveType String // "living-will", "dnr", "dni", "comfort-care", "organ-donation", "power-of-attorney"
+  description  String
+  documentUrl  String? // uploaded document
+  createdDate  String
+  expiryDate   String?
+  witnessName  String?
+  notarized    Boolean @default(false)
+  isActive     Boolean @default(true)
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== MEDICATION ADHERENCE (NF3) ====================
+
+model MedicationAdherence {
+  id           String  @id @default(cuid())
+  patientId    String
+  medicationName String
+  overallScore Float  // 0-100
+  lastRefillDate String?
+  missedDosesLast30Days Int?
+  source       String  // "self-reported", "pharmacy-data", "smart-pillbox", "blood-test"
+  updatedDate  String
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== PAIN PROFILE (NF28) ====================
+
+model PainProfile {
+  id                      String  @id @default(cuid())
+  patientId               String  @unique
+  chronicPainConditions   String  // comma-separated
+  currentPainPlan         String  // description of current management
+  opioidTolerance         String  // "naive", "low", "moderate", "high"
+  opioidUseDisorderHistory String // "none", "active", "in-recovery"
+  effectiveMedications    String  // comma-separated
+  ineffectiveMedications  String  // comma-separated
+  painMedAllergies        String  // comma-separated
+  sickleCellStatus        Boolean @default(false)
+  mmeDailyDose            Float?  // morphine milligram equivalent
+  naloxonePrescribed      Boolean @default(false)
+  painManagementDoctor    String? // name + phone
+  patient                 Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== GENETIC FLAGS (NF32) ====================
+
+model GeneticFlag {
+  id              String  @id @default(cuid())
+  patientId       String
+  condition       String  // "malignant-hyperthermia", "pseudocholinesterase-deficiency", "porphyria", "g6pd-deficiency", "long-qt"
+  gene            String? // "RYR1", "BCHE", "HMBS", "G6PD", "KCNQ1"
+  implications    String  // what to avoid, what's safe
+  medicationsToAvoid String // comma-separated
+  safeAlternatives String // comma-separated
+  familyScreening Boolean @default(false) // should family be screened?
+  verifiedDate    String?
+  patient         Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== DEVICE INTEGRATION (NF34) ====================
+
+model DeviceIntegration {
+  id              String  @id @default(cuid())
+  patientId       String
+  deviceType      String  // "cgm", "insulin-pump", "pacemaker", "smart-inhaler", "smart-watch"
+  deviceName      String  // "Dexcom G7", "Medtronic pacemaker", etc.
+  manufacturer    String?
+  model           String?
+  serialNumber    String?
+  lastSyncDate    String?
+  batteryLevel    Int?    // percentage
+  dataSummary     String? // latest data snapshot JSON
+  isActive        Boolean @default(true)
+  patient         Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== OCCUPATIONAL EXPOSURE (NF5, NF19) ====================
+
+model OccupationalExposure {
+  id            String  @id @default(cuid())
+  patientId     String
+  workplace     String
+  hazardType    String  // "chemical", "radiation", "biological", "physical", "noise"
+  specificAgent String? // "organophosphates", "asbestos", "lead", "isocyanates"
+  exposureLevel String? // "low", "moderate", "high"
+  msdsReference String? // Material Safety Data Sheet reference
+  lastExposure  String?
+  ppeRequired   String? // required PPE
+  patient       Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== DISCHARGE SAFETY NET (NF33) ====================
+
+model DischargeAssessment {
+  id                  String  @id @default(cuid())
+  patientId           String
+  visitDate           String
+  dischargeSafetyScore Int   // 0-100
+  transportAvailable  Boolean @default(true)
+  pharmacyAccess      Boolean @default(true)
+  foodSecurity        Boolean @default(true)
+  socialSupport       Boolean @default(true)
+  healthLiteracy      String  // "high", "moderate", "low"
+  followUpScheduled   Boolean @default(false)
+  homeHealthNeeded    Boolean @default(false)
+  dmeNeeded           String? // durable medical equipment needed
+  readmissionRisk     Float?  // 0-1
+  interventions       String? // JSON of recommended interventions
+  aiRecommendation    String?
+  createdAt           DateTime @default(now())
+  patient             Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== RADIATION EXPOSURE TRACKER (NF10) ====================
+
+model RadiationExposure {
+  id              String  @id @default(cuid())
+  patientId       String
+  source          String  // "ct-scan", "x-ray", "fluoroscopy", "nuclear-medicine"
+  bodyRegion      String
+  doseMSv         Float   // millisieverts
+  studyDate       String
+  facility        String?
+  cumulativeTotal Float?  // running total after this exposure
+  patient         Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== CAREGIVER ACCESS PASS (NF15) ====================
+
+model CaregiverPass {
+  id            String  @id @default(cuid())
+  patientId     String
+  caregiverName String
+  relationship  String
+  accessLevel   Int     // 1=basic, 2=medications, 3=full
+  qrCode        String  // unique pass code
+  issuedAt      DateTime @default(now())
+  expiresAt     DateTime
+  usedAt        DateTime?
+  isActive      Boolean @default(true)
+  patient       Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== MEDICAL TIMELINE (NF30) ====================
+
+model MedicalTimelineEvent {
+  id          String  @id @default(cuid())
+  patientId   String
+  eventType   String  // "diagnosis", "surgery", "er-visit", "medication-start", "medication-stop", "vaccination", "lab-result", "hospitalization"
+  title       String
+  description String
+  eventDate   String
+  facility    String?
+  severity    String? // "routine", "significant", "critical"
+  icon        String? // lucide icon name
+  metadata    String? // JSON for extra data
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ==================== FAMILY WAR ROOM (NF12) ====================
+
+model FamilyWarRoom {
+  id           String  @id @default(cuid())
+  patientId    String
+  roomId       String  @unique // unique room code
+  status       String  @default("active") // "active", "resolved", "closed"
+  patientStatus String? // "stable", "critical", "in-surgery", "in-ct", "recovering"
+  patientLocation String? // room number / area
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  members      WarRoomMember[]
+  messages     WarRoomMessage[]
+  updates      WarRoomUpdate[]
+}
+
+model WarRoomMember {
+  id        String  @id @default(cuid())
+  roomId    String
+  name      String
+  role      String  // "spouse", "parent", "sibling", "child", "friend", "doctor"
+  phone     String?
+  email     String?
+  isOnline  Boolean @default(false)
+  joinedAt  DateTime @default(now())
+  warRoom   FamilyWarRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model WarRoomMessage {
+  id        String  @id @default(cuid())
+  roomId    String
+  senderName String
+  senderRole String
+  content   String
+  timestamp DateTime @default(now())
+  warRoom   FamilyWarRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model WarRoomUpdate {
+  id        String  @id @default(cuid())
+  roomId    String
+  type      String  // "status-change", "location-change", "medication-given", "procedure-started", "discharge-ready"
+  content   String
+  timestamp DateTime @default(now())
+  warRoom   FamilyWarRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id          String  @id @default(cuid())
+  userId      String
+  type        String  // "emergency-access", "family-notification", "consent-request", "outbreak-alert", "discharge-reminder", "vaccine-due"
+  title       String
+  message     String
+  priority    String  @default("normal") // "urgent", "high", "normal", "low"
+  read        Boolean @default(false)
+  actionUrl   String? // link to take action
+  createdAt   DateTime @default(now())
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==================== OUTBREAK RADAR (NF17) ====================
+
+model OutbreakAlert {
+  id          String  @id @default(cuid())
+  type        String  // "chemical", "food-poisoning", "epidemic", "bioterrorism"
+  zipCode     String
+  symptoms    String  // comma-separated
+  caseCount   Int
+  firstDetected DateTime
+  alertLevel  String  // "hospital", "county", "state", "cdc"
+  description String
+  status      String  @default("active") // "active", "investigating", "resolved"
+  createdAt   DateTime @default(now())
+}
+
+// ==================== ORGAN MATCH ENGINE (NF9) ====================
+
+model OrganMatch {
+  id           String  @id @default(cuid())
+  donorPatientId String
+  recipientId  String? // matched recipient ID
+  organType    String  // "heart", "kidney", "liver", "lungs", "cornea", "tissue"
+  bloodMatch   Boolean @default(false)
+  tissueMatch  Float?  // 0-100 match percentage
+  facility     String?
+  distance     Float?  // km
+  viabilityMinutes Int? // minutes of viability remaining
+  status       String  @default("searching") // "searching", "matched", "dispatched", "transplanted"
+  createdAt    DateTime @default(now())
+}
