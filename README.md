@@ -14,7 +14,7 @@ Giving hospitals & first responders instant access to a patient's critical medic
 
 ## 📖 Overview
 
-**MemoryVaulto** is a healthcare web application that acts as a digital memory vault for a patient's critical medical history. When a patient is unconscious, confused, or unable to communicate during an emergency, MemoryVaulto allows authorized hospital staff and first responders to instantly retrieve life-saving information — allergies, medications, conditions, implants, advance directives, and more.
+**MemoryVault** is a healthcare web application that acts as a digital memory vault for a patient's critical medical history. When a patient is unconscious, confused, or unable to communicate during an emergency, MemoryVault allows authorized hospital staff and first responders to instantly retrieve life-saving information — allergies, medications, conditions, implants, advance directives, and more.
 
 > ⚠️ **Disclaimer:** This is a **demo / portfolio project**, not a certified medical device or HIPAA-compliant system. Do **not** use it with real patient data.
 
@@ -121,7 +121,7 @@ A secure, consent-driven vault that:
 ## 📁 Project Structure
 
 ```
-MemoryVaulto/
+MemoryVault/
 ├── prisma/
 │   ├── schema.prisma          ← 30+ models (PostgreSQL)
 │   └── seed.ts                ← Demo patients & data
@@ -162,8 +162,8 @@ MemoryVaulto/
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/RatneshAmule/MemoryVaulto.git
-cd MemoryVaulto
+git clone https://github.com/RatneshAmule/MemoryVault.git
+cd MemoryVault
 
 # 2. Install dependencies
 npm install
@@ -189,7 +189,7 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 Create a `.env` file (see `.env.example`):
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/memoryvaulto?schema=public"
+DATABASE_URL="postgresql://user:password@localhost:5432/MemoryVault?schema=public"
 JWT_SECRET="your-super-strong-secret-here-at-least-32-chars"
 ```
 
