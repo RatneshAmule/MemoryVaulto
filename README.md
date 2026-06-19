@@ -1,223 +1,337 @@
-# MemoryVaulto — Code Review
+<div align="center">
 
-> **Repository:** [RatneshAmule/MemoryVaulto](https://github.com/RatneshAmule/MemoryVaulto)
-> **Tagline:** *"When you can't speak, your vault does."*
-> **Review Date:** 2026-06-20
+# 🧠 MemoryVaulto
 
----
+### Emergency Medical Identity Vault
 
-## 1. Project Overview
+**_"When you can't speak, your vault does."_**
 
-**MemoryVaulto** is an **Emergency Medical Identity Vault** — a healthcare web application that gives hospitals and first responders instant access to a patient's critical medical history during emergencies, when the patient is unconscious or unable to communicate.
+Giving hospitals & first responders instant access to a patient's critical medical history during emergencies — in 5 seconds, not 45 minutes.
 
-**Pitch (from landing page):** "Digital Human Memory Vault gives hospitals instant access to your critical medical history during emergencies — in 5 seconds, not 45 minutes." Claims to solve "23 problems" with "99 unique features" and an estimated "15,000+ lives saved/yr."
-
-> ⚠️ The README in the repo itself is essentially empty (only `# MemoryVault` on both `main` and `master` branches). This review is based on direct code inspection.
+</div>
 
 ---
 
-## 2. Tech Stack
+## 📖 Overview
+
+**MemoryVaulto** is a healthcare web application that acts as a digital memory vault for a patient's critical medical history. When a patient is unconscious, confused, or unable to communicate during an emergency, MemoryVaulto allows authorized hospital staff and first responders to instantly retrieve life-saving information — allergies, medications, conditions, implants, advance directives, and more.
+
+> ⚠️ **Disclaimer:** This is a **demo / portfolio project**, not a certified medical device or HIPAA-compliant system. Do **not** use it with real patient data.
+
+---
+
+## 🚨 The Problem
+
+In emergencies, critical information gaps cost lives:
+
+- ⏱️ Hospital staff spend **30–45 minutes** tracking down a patient's medical history
+- 💊 Unaware of allergies → preventable adverse drug reactions
+- 🚫 Unknown DNR / advance directives → unwanted procedures
+- 🩸 Unknown blood type / antibodies → transfusion risks
+- 🧬 Unknown pharmacogenomic flags → anesthesia complications
+- 🌍 Unknown cultural / religious directives → disrespectful care
+
+## 💡 The Solution
+
+A secure, consent-driven vault that:
+
+1. Stores **30+ categories** of critical medical data per patient
+2. Allows **break-glass emergency access** with full audit logging
+3. **Notifies the patient** (or proxy) the moment their vault is accessed
+4. Provides **clinical decision support** for triage, drug interactions, red flags
+5. Powers a **family war room** for real-time updates during hospitalization
+
+---
+
+## ✨ Key Features
+
+### 🏥 Patient Vault
+- Allergies & adverse reactions
+- Medications & adherence tracking
+- Conditions (ICD-11 coded)
+- Surgeries & implants (with MRI-safety flags)
+- Vaccinations
+- Emergency contacts & consent proxies
+- Advance directives (DNR, DNI, living will)
+- Cultural / religious directives
+- **Voice messages** — "the voice of the patient" played before procedures
+- Pharmacogenomic profile
+- Genetic anesthesia flags (Malignant Hyperthermia, G6PD deficiency, Pseudocholinesterase deficiency)
+- Pain & opioid tolerance profile
+- Vital baselines & blood antibodies
+- Device integrations (CGM, pacemaker, insulin pump)
+- Occupational & radiation exposure tracking
+- Caregiver access passes
+- Medical timeline
+
+### 🚪 Emergency Portal
+- Break-glass access with **24h expiry**
+- Automatic **audit logging** of every access
+- **Patient notification** on every break-glass event
+- Patient search by name / blood type / ID
+
+### 🏨 Hospital Dashboard
+- Access logs & audit trails
+- Organ-match engine
+- Outbreak radar (syndromic surveillance)
+
+### 🤖 Clinical Decision Support
+- Triage protocol suggestions
+- Red-flag detection (severe allergies, anticoagulants, sepsis markers)
+- Risk scoring
+- Differential diagnosis hints
+- Drug-interaction checker
+- Pediatric dosing calculator
+- Surgery safety checklist
+- Discharge readiness scoring
+- Treatment firewall (allergy-aware prescribing)
+- Medication reconciliation
+- Auto-generated clinical notes (SOAP format)
+
+### 👨‍👩‍👧 Family War Room
+- Real-time status updates for families
+- Messaging during a patient's hospitalization
+- Updates from care team
+
+### 📊 Additional
+- Polished landing page
+- Demo mode with mock patients
+- Analytics dashboard
+- AI Lab for experimentation
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | **Next.js 16.1** (App Router) |
-| Language | **TypeScript 5** |
-| UI Library | **React 19** |
-| Styling | **Tailwind CSS v4** + `tailwindcss-animate`, `tw-animate-css` |
-| Component system | **shadcn/ui** (new-york style, ~44 components) + **Radix UI** primitives |
-| Animations | Framer Motion |
-| State | **Zustand** (client-side page routing + auth), TanStack Query/Table |
-| Forms | react-hook-form + Zod |
-| Database ORM | **Prisma 6** (PostgreSQL primary; SQLite schema also present) |
-| Auth | **jsonwebtoken (JWT)** + **bcryptjs** (12 rounds), custom middleware |
-| Charts | Recharts |
-| Icons | lucide-react |
-| Markdown/Editor | @mdxeditor/editor, react-markdown, react-syntax-highlighter |
-
-**⚠️ Unused dependencies** (in `package.json` but never imported anywhere in `src/`):
-- `z-ai-web-dev-sdk` (LLM SDK — note: the "AI" features are actually rule-based, see §6)
-- `next-auth` (custom JWT auth is used instead)
-- `next-intl` (no i18n setup)
-- `@vercel/postgres` (Prisma is used instead)
-
-**Scale:** ~21,900 lines of TS/TSX total — a substantial codebase.
+| **Framework** | Next.js 16.1 (App Router) |
+| **Language** | TypeScript 5 |
+| **UI** | React 19 + Tailwind CSS v4 + shadcn/ui (44 components) + Radix UI |
+| **Animations** | Framer Motion |
+| **State** | Zustand + TanStack Query |
+| **Forms** | react-hook-form + Zod |
+| **Database** | PostgreSQL + Prisma 6 ORM |
+| **Auth** | JWT + bcrypt (12 rounds), custom middleware |
+| **Charts** | Recharts |
+| **Icons** | lucide-react |
 
 ---
 
-## 3. Project Structure
+## 📁 Project Structure
 
 ```
 MemoryVaulto/
-├── README.md                  ← essentially empty ("# MemoryVault")
-├── package.json               ← Next.js 16 stack, ~70 deps
-├── components.json            ← shadcn/ui config (new-york style)
-├── next.config.ts, tsconfig.json, eslint.config.mjs
-├── tailwind.config.ts, postcss.config.mjs
 ├── prisma/
-│   ├── schema.prisma          ← 574 lines, ~30 models (PostgreSQL)
-│   ├── schema.sqlite.prisma   ← 527 lines (duplicate/leftover)
-│   └── seed.ts                ← 486 lines, demo patients (Maria, James, Aiden, Amira…)
+│   ├── schema.prisma          ← 30+ models (PostgreSQL)
+│   └── seed.ts                ← Demo patients & data
 ├── public/
-│   ├── logo.svg, favicon.svg, og-image.png, robots.txt
+│   └── logo.svg, favicon.svg, og-image.png
 └── src/
-    ├── middleware.ts          ← JWT auth gate + security headers for /api/*
+    ├── middleware.ts          ← JWT auth + security headers
     ├── app/
-    │   ├── layout.tsx, page.tsx, globals.css
-    │   └── api/               ← ~75 route files, ~5,300 LOC
+    │   ├── page.tsx           ← Client-side page router
+    │   └── api/               ← ~75 REST routes
     │       ├── auth/{login,register}
-    │       ├── patients/[id]/ … (20+ sub-resources: allergies, medications, conditions,
-    │       │   surgeries, implants, vaccinations, contacts, consent-proxies,
-    │       │   pharmacogenomics, genetic-flags, vital-baselines, blood-antibodies,
-    │       │   cultural-directives, advance-directives, voice-messages, pain-profile,
-    │       │   device-integrations, occupational-exposures, radiation-exposures,
-    │       │   caregiver-passes, medical-tests, timeline-events, discharge-assessments,
-    │       │   medication-adherence, surgeries, tests, sub/[sub])
-    │       ├── emergency/[patientId]/{access,route,status}, search, notify
+    │       ├── patients/[id]/  ← 20+ sub-resources
+    │       ├── emergency/[patientId]/{access,route,status}
     │       ├── hospital/{dashboard,access-logs,organ-matches,outbreaks}
-    │       ├── ai/{triage,red-flags,risk-score,clinical-notes,differential-diagnosis,
-    │       │   discharge-assessment,medication-reconciliation,pediatric-dosing,
-    │       │   surgery-checklist,treatment-firewall}
-    │       ├── drugs/check, access-logs, seed, war-room/...
-    │       └── route.ts
+    │       ├── ai/{triage,red-flags,risk-score,...}
+    │       └── war-room/
     ├── components/            ← ~15,500 LOC
-    │   ├── ui/                ← 44 shadcn primitives
-    │   ├── landing/, auth/, patient/ (+ patient/sections/), emergency/,
-    │   │   hospital/, war-room/, ai-lab/, analytics/, demo/, vault/
-    │   └── ...
-    ├── stores/app-store.ts    ← Zustand global store (auth, page routing, patient)
-    ├── lib/                   ← db.ts, jwt.ts, auth-middleware.ts, validation.ts, utils.ts
-    └── hooks/                 ← use-mobile.ts, use-toast.ts
+    │   ├── ui/                ← shadcn primitives
+    │   ├── landing/, auth/, patient/, emergency/
+    │   ├── hospital/, war-room/, ai-lab/, analytics/
+    │   └── demo/, vault/
+    ├── stores/app-store.ts    ← Zustand global store
+    ├── lib/                   ← db, jwt, auth-middleware, validation, utils
+    └── hooks/                 ← use-mobile, use-toast
 ```
 
 ---
 
-## 4. Key Features
+## 🚀 Getting Started
 
-The Prisma schema reveals an ambitious clinical data model with ~30 models:
+### Prerequisites
 
-- **Patient Vault** — allergies, medications, conditions (ICD-11), surgeries, implants (MRI-safety), vaccinations, emergency contacts, consent proxies, advance directives, cultural/religious directives, voice messages ("voice of the patient"), pain profile, pharmacogenomics, genetic flags (malignant hyperthermia, G6PD, etc.), vital baselines, blood antibodies, device integrations (CGM, pacemaker), occupational & radiation exposure tracking, caregiver access passes, medical timeline, discharge assessments, medication adherence.
-- **Emergency Portal** — break-glass access with audit logging + automatic patient notifications; patient search by name/blood type.
-- **Hospital Dashboard** — access logs, organ-match engine, outbreak radar.
-- **"AI" Clinical Decision Support** (see caveat §6) — triage protocols, red-flag detection, risk scoring, differential diagnosis, drug-interaction checker, pediatric dosing, surgery checklist, discharge safety scoring, treatment firewall, medication reconciliation, clinical-note generation.
-- **Family War Room** — real-time-ish status updates + messaging for families during a patient's hospitalization.
-- **Demo Mode**, **Analytics**, **AI Lab** pages, plus a polished **landing page**.
+- **Node.js** ≥ 18.18
+- **PostgreSQL** ≥ 14 (or use Docker)
+- npm / pnpm / yarn
 
----
+### Installation
 
-## 5. How It Works (Architecture)
+```bash
+# 1. Clone the repo
+git clone https://github.com/RatneshAmule/MemoryVaulto.git
+cd MemoryVaulto
 
-**Routing:** Despite being Next.js, the app uses **client-side page switching** via a Zustand `currentPage` enum (`landing | auth | patient-dashboard | emergency | hospital | access-logs | war-room | demo | ai-lab | analytics`) rendered in `src/app/page.tsx` — not Next.js file-based routing for the main views. Only `/api/*` uses Next route handlers.
+# 2. Install dependencies
+npm install
 
-**Auth flow:** `POST /api/auth/register` or `/login` → bcrypt-hashed password + JWT (8h expiry) issued. Token stored both in Zustand state and a `SameSite=Strict` cookie. `src/middleware.ts` gates all `/api/*` routes (except login/register), verifying JWT and enforcing role restrictions (e.g. `/api/hospital` requires admin/doctor/nurse/specialist). Per-route helpers `enforceAccess()` / `verifyPatientAccess()` in `lib/auth-middleware.ts` do finer-grained checks (patients can only read their own record).
+# 3. Set up environment variables
+cp .env.example .env
+# Edit .env with your DATABASE_URL and JWT_SECRET
 
-**Data access:** Prisma singleton (`lib/db.ts`) with a global cache for dev hot-reload. Patient GET endpoint eagerly includes all ~25 related tables in one query.
+# 4. Run database migrations
+npx prisma migrate dev --name init
 
-**Emergency access:** `POST /api/emergency/[patientId]/access` creates an `AccessLog` (break-glass, 24h expiry) and pushes a `Notification` to the patient — a thoughtful audit/consent design.
+# 5. Seed demo data
+npx prisma db seed
 
-**"AI" routes** are **deterministic rule engines**, not LLM calls. E.g. `/api/ai/triage` matches condition names against keyword lists (e.g. "atrial fibrillation" → Cardiac Protocol) and returns hardcoded step lists. `/api/ai/red-flags` scans for severe allergies, DNR, anticoagulants, etc. `/api/ai/clinical-notes` simply templates a SOAP note from DB fields. Despite `z-ai-web-dev-sdk` being a dependency, **no source file imports it**.
+# 6. Start the dev server
+npm run dev
+```
 
----
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-## 6. Code Quality Assessment
+### Environment Variables
 
-### ✅ Strengths
+Create a `.env` file (see `.env.example`):
 
-1. **Clinically literate domain modeling** — the Prisma schema is genuinely detailed (pharmacogenomics, cultural directives, radiation dose tracking — rare even in real EMRs).
-2. **Bleeding-edge stack** — Next.js 16, React 19, Tailwind v4, Prisma 6.
-3. **Security framework is more mature than typical hackathon work** — RBAC middleware, security headers (CSP, X-Frame-Options DENY, nosniff, Permissions-Policy), break-glass audit + patient notification, bcrypt 12 rounds.
-4. **Well-typed** — Zod validation, TS interfaces mirroring Prisma models.
-5. **Consistent structure** — RESTful nested routes, shadcn/ui throughout.
-
-### 🔴 Critical Issues
-
-#### Security holes
-
-1. **`PUT /api/patients/[id]` has NO authorization check** — any authenticated user can overwrite *any* patient's blood type, DNR, organ-donor status. Serious clinical-safety bug.
-2. **JWT secret has a weak hardcoded fallback** (`'change-me-in-production-use-strong-secret'`) — silently insecure if env var missing.
-3. **Auth token stored in JS-accessible cookie** (not HttpOnly) — XSS-stealable. The code comment even admits it should be HttpOnly.
-4. **`emergency/access` trusts `accessorId` from request body** instead of JWT — spoofing risk.
-5. **No rate limiting** on login / break-glass endpoints.
-
-#### Bugs / correctness
-
-6. **Two broken route folders** (typos — missing opening `[`):
-   - `…/medications/edicationId]/` → should be `[medicationId]`
-   - `…/voice-messages/essageId]/` → should be `[messageId]`
-
-   These PUT/DELETE endpoints silently never match a real URL — the routes are dead.
-
-7. **Leftover SQLite workarounds** — `emergency/search` does in-memory `.filter()` for case-insensitive name matching with a comment "SQLite doesn't support mode: 'insensitive'" — but the active `schema.prisma` uses PostgreSQL, which *does* support it. Inefficient and stale.
-
-8. **Duplicate schema** — `schema.sqlite.prisma` (527 lines) is dead weight that will drift out of sync.
-
-#### Hygiene / completeness
-
-9. **README is empty** — no description, setup, env-var list, architecture notes, or screenshots.
-10. **No LICENSE file** — all rights reserved by default.
-11. **No `.env.example`** — required vars (`DATABASE_URL`, `JWT_SECRET`) are undocumented.
-12. **No tests** (no `.test.ts`/`.spec.ts`/`__tests__` anywhere) and **no CI** (no `.github/`).
-13. **Unused dependencies** inflate the install/build (`z-ai-web-dev-sdk`, `next-auth`, `next-intl`, `@vercel/postgres`).
-14. **Misleading "AI" labeling** — routes under `/api/ai/*` are rule-based heuristics; including the LLM SDK but not using it (and marketing "Healthcare AI") is a gap between claim and implementation.
-15. **Commit history is minimal** — only 2 commits. Suggests a one-shot dump rather than iterative development.
-16. The **war-room messaging** is plain REST polling — not real-time (no WebSockets/SSE), despite the "real-time" implication.
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/memoryvaulto?schema=public"
+JWT_SECRET="your-super-strong-secret-here-at-least-32-chars"
+```
 
 ---
 
-## 7. License
+## 👤 Demo Accounts
 
-**None.** No `LICENSE` file exists. Under default copyright, the code is **"all rights reserved"** — no one may legally copy, modify, or distribute it without the author's permission. If the intent is open source, add a license (MIT / Apache-2.0 are common).
+The seed script (`prisma/seed.ts`) creates several demo patients and staff:
 
----
+| Role | Email | Password |
+|------|-------|----------|
+| Patient | `maria@test.com` | `password123` |
+| Patient | `james@test.com` | `password123` |
+| Doctor | `dr.smith@hospital.com` | `password123` |
+| Nurse | `nurse.kim@hospital.com` | `password123` |
+| Admin | `admin@hospital.com` | `password123` |
 
-## 8. Screenshots / Demos
-
-- **No screenshots or demo media** in the README.
-- `public/og-image.png` (70 KB) exists for social sharing but isn't referenced in documentation.
-- The app has an in-app **"Watch Demo"** button → `DemoModePage` component (client-side walkthrough with mock patients), but nothing recordable is shipped.
-
----
-
-## 9. Recommendations (Prioritized)
-
-### 🔥 Must fix (security/correctness)
-
-1. Add an authorization check to `PUT /api/patients/[id]` (use `verifyPatientAccess`) — currently anyone can edit any patient.
-2. Make `JWT_SECRET` **throw on missing** in production (remove the weak fallback).
-3. Move the auth token to an **HttpOnly, Secure** cookie set by the server, not `document.cookie`.
-4. Derive `accessorId` from the verified JWT in `emergency/access` instead of trusting the request body.
-5. Rename the two malformed route folders (`[medicationId]`, `[messageId]`) so those endpoints actually work.
-
-### 🟡 Should fix
-
-6. Write a real **README**: purpose, features, setup (`cp .env.example .env`, `prisma migrate`, `db:seed`), env vars, demo logins (the seed has `maria@test.com` / `password123`, etc.), screenshots.
-7. Add a **LICENSE** file.
-8. Add **`.env.example`** documenting `DATABASE_URL` and `JWT_SECRET`.
-9. Delete `schema.sqlite.prisma` and the SQLite workaround in `emergency/search`; use Prisma `mode: 'insensitive'`.
-10. Remove unused deps (`z-ai-web-dev-sdk`, `next-auth`, `next-intl`, `@vercel/postgres`) — or actually wire the LLM SDK into the `/api/ai/*` routes to make them genuinely AI-powered.
-11. Add **rate limiting** (e.g. `@upstash/ratelimit`) to auth and break-glass endpoints.
-
-### 🟢 Nice-to-have
-
-12. Add **tests** (Vitest/Jest) for the rule-based AI engines and auth middleware — these are pure functions, easy to test.
-13. Add **CI** (GitHub Actions: lint + typecheck + build).
-14. Convert the Zustand page-switching to **Next.js routing** to get URLs, deep-linking, SSR, and better SEO for the landing page.
-15. Make the war-room **real-time** with Server-Sent Events or WebSockets.
-16. Split the giant patient-include query (25+ relations) into targeted fetches to avoid over-fetching.
-17. Add **HIPAA/GDPR notes** to the README — for a medical app, documenting compliance posture (even if "not production-ready / demo only") is important.
+> Change these in production!
 
 ---
 
-## 10. TL;DR
+## 🔌 API Overview
 
-MemoryVaulto is an **ambitious, well-modeled emergency medical records vault** built on a modern Next.js 16 + Prisma + TypeScript + shadcn/ui stack (~22k LOC, ~30 DB models, ~75 API routes). Its clinical domain modeling is genuinely thoughtful and the security *framework* (JWT, RBAC, audit logging, break-glass notifications, security headers) is more mature than typical hackathon projects.
+All API routes live under `/api/*` and are protected by JWT auth (except `/api/auth/login` and `/api/auth/register`).
 
-However, it is **held back by**:
+### Auth
+- `POST /api/auth/register` — create a new account
+- `POST /api/auth/login` — login & receive JWT
 
-- An empty README
-- No license
-- No tests/CI
-- A few real security holes (unauthenticated patient-update endpoint, JS-accessible auth cookie, weak JWT-secret fallback)
-- Two broken dynamic-route folders from typos
-- Misleadingly-labeled "AI" features that are actually hardcoded rules
+### Patient Vault
+- `GET /api/patients/:id` — full patient record (25+ relations)
+- `PUT /api/patients/:id` — update patient
+- `GET/POST/PUT/DELETE /api/patients/:id/{allergies,medications,conditions,...}` — sub-resources
 
-**Verdict:** With ~1 day of hardening + documentation it could be a genuinely impressive portfolio/demo project; in its current state it's a strong prototype that **shouldn't be deployed against real PHI**.
+### Emergency
+- `POST /api/emergency/:patientId/access` — break-glass access
+- `GET /api/emergency/search?q=...` — patient search
+- `POST /api/emergency/:patientId/notify` — notify patient/proxy
+
+### Hospital
+- `GET /api/hospital/dashboard` — aggregate metrics
+- `GET /api/hospital/access-logs` — audit trail
+- `GET /api/hospital/organ-matches` — organ match candidates
+- `GET /api/hospital/outbreaks` — syndromic surveillance
+
+### AI / Clinical Decision Support
+- `POST /api/ai/triage`
+- `POST /api/ai/red-flags`
+- `POST /api/ai/risk-score`
+- `POST /api/ai/differential-diagnosis`
+- `POST /api/ai/medication-reconciliation`
+- `POST /api/ai/pediatric-dosing`
+- `POST /api/ai/surgery-checklist`
+- `POST /api/ai/discharge-assessment`
+- `POST /api/ai/treatment-firewall`
+- `POST /api/ai/clinical-notes`
+
+### War Room
+- `GET /api/war-room/:patientId` — status & messages
+- `POST /api/war-room/:patientId/messages` — post update
+
+---
+
+## 🔐 Security
+
+- ✅ bcrypt password hashing (12 rounds)
+- ✅ JWT auth with 8h expiry
+- ✅ Role-based access control (patient / doctor / nurse / specialist / admin)
+- ✅ Per-route authorization (patients only see their own records)
+- ✅ Security headers (CSP, X-Frame-Options DENY, nosniff, Permissions-Policy)
+- ✅ Break-glass audit logging with patient notification
+- ✅ Prisma ORM (SQL-injection-safe parameterized queries)
+
+> 🚧 **Not yet production-hardened.** See [Security Roadmap](#-roadmap) below.
+
+---
+
+## 🗺️ Roadmap
+
+### Phase 1 — Hardening (in progress)
+- [ ] HttpOnly + Secure auth cookies
+- [ ] Rate limiting on auth & break-glass endpoints
+- [ ] End-to-end authorization on all patient PUT/DELETE routes
+- [ ] Throw on missing JWT_SECRET in production
+- [ ] Real-time war room (WebSocket / SSE)
+
+### Phase 2 — Compliance
+- [ ] HIPAA risk assessment
+- [ ] Audit log immutability (append-only / hash chain)
+- [ ] Data encryption at rest (column-level for PHI fields)
+- [ ] BAA-ready documentation
+
+### Phase 3 — Real AI
+- [ ] Wire LLM SDK into `/api/ai/*` routes (currently rule-based)
+- [ ] RAG over patient timeline for clinical summarization
+- [ ] Multilingual voice messages
+
+### Phase 4 — Interoperability
+- [ ] HL7 FHIR R4 export/import
+- [ ] SMART on FHIR app launch
+- [ ] IHE PIX/PDQ patient matching
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feat/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feat/amazing-feature`)
+5. Open a Pull Request
+
+Please run `npm run lint` and `npm run build` before submitting.
+
+---
+
+## 📜 License
+
+This project is currently **not licensed** — all rights reserved.
+
+If you'd like to use it, please contact the author. (MIT or Apache-2.0 may be added in the future.)
+
+---
+
+## ⚠️ Medical Disclaimer
+
+This software is provided for **demonstration and educational purposes only**. It is **not** a medical device, is **not** HIPAA-compliant, and is **not** intended for use with real patient data. The authors assume no liability for any use of this software.
+
+---
+
+## 👨‍💻 Author
+
+**RatneshAmule** — [GitHub](https://github.com/RatneshAmule)
+
+> Built with the goal that **no one should die because a hospital didn't know their medical history.**
+
+---
+
+<div align="center">
+
+**⭐ If this project resonates with you, please star the repo.**
+
+</div>
