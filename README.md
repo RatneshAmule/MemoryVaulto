@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧠 MemoryVaulto
+# 🧠 MemoryVault
 
 ### Emergency Medical Identity Vault
 
